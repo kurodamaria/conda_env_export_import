@@ -11,13 +11,16 @@ if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 # Get the list of all conda environments
+result = subprocess.run(['conda', 'info', '--json'], stdout=subprocess.PIPE)
+base_env = json.loads(result.stdout.decode('utf-8'))['default_prefix']
+
 result = subprocess.run(['conda', 'env', 'list', '--json'], stdout=subprocess.PIPE)
 envs = json.loads(result.stdout.decode('utf-8'))['envs']
 
 # Loop through each environment and export it
 for env in envs:
     # Skip the base environment
-    if env.endswith('anaconda3'):
+    if env == base_env:
         continue
 
     # Get the name of the environment
@@ -29,7 +32,3 @@ for env in envs:
     # Run the conda env export command
     print(f'Exporting environment: {env_name}')
     subprocess.run(['conda', 'env', 'export', '-n', env_name, '--no-build', '-f', output_file])
-
-# Package the exported yml files
-shutil.make_archive('environments', 'zip', output_dir)
-print(f'Packaged environments into environments.zip')
